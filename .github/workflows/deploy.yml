@@ -10,18 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.VPS_IP }}
-        username: ${{ secrets.VPS_USER }}
-        password: ${{ secrets.VPS_PASSWORD }}
-        port: ${{ secrets.VPS_PORT }}
-        script: |
-          cd /chemin/vers/votre/app
-          git pull origin main
-          docker-compose down
-          docker-compose up --build -d
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ~/myapp || mkdir ~/myapp && cd ~/myapp
+            git clone https://github.com/username/repo.git . || git pull origin main
+            docker-compose down
+            docker-compose up -d --build
