@@ -4,7 +4,7 @@ services:
     build: ./front
     restart: always
     ports:
-      - "3000:80" #redirection port 
+      - "8080:3000" #redirection port 
 
   api:
     build: ./api
