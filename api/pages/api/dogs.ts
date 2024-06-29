@@ -14,7 +14,7 @@ client.connect().catch(error => console.log(error));
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   await Cors(req, res, {
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
-    origin: '*',
+    origin: 'http://localhost:3000',
     crossOrigin:'anonymous'
   });
 
