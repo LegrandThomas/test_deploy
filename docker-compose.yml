@@ -10,7 +10,7 @@ services:
     build: ./api
     restart: always
     ports:
-      - "3001:3001"
+      - "8080:3001"
     environment:
       DATABASE_URL: postgres://postgres:password@postgres:5432/base_test
     depends_on:
