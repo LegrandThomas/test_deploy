@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: SSH and deploy to VPS
         uses: appleboy/ssh-action@v0.1.8
@@ -20,6 +20,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
             cd ~/myapp || (mkdir ~/myapp && cd ~/myapp)
             git clone https://github.com/LegrandThomas/test_deploy.git . || (git fetch && git checkout origin/main)
             docker-compose down
