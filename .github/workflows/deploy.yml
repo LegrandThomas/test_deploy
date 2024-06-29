@@ -8,20 +8,20 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
-      - name: SSH and deploy to VPS
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
-            sshpass -p ${{ secrets.VPS_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} -p ${{ secrets.VPS_PORT }} "mkdir -p ~/myapp"
-            sshpass -p ${{ secrets.VPS_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} -p ${{ secrets.VPS_PORT }} "cd ~/myapp && git clone https://github.com/LegrandThomas/test_deploy.git . || (git fetch && git checkout origin/main)"
-            sshpass -p ${{ secrets.VPS_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} -p ${{ secrets.VPS_PORT }} "cd ~/myapp && docker-compose down"
-            sshpass -p ${{ secrets.VPS_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} -p ${{ secrets.VPS_PORT }} "cd ~/myapp && docker-compose up -d --build"
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.VPS_IP }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          cd /chemin/vers/votre/app
+          git pull origin main
+          docker-compose down
+          docker-compose up --build -d
