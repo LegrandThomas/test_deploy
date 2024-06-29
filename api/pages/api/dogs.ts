@@ -15,8 +15,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   await Cors(req, res, {
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
     origin: '*',
-    allowedHeaders: ['X-Requested-With', 'content-type'],
-    credentials: true,
+    crossOrigin:'anonymous'
   });
 
   if (req.method === 'POST') {
