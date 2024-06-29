@@ -15,7 +15,13 @@ const Home = () => {
 
   const fetchDogs = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:3001/api/dogs'); 
+      const response = await fetch('http://localhost:3001/api/dogs', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch dogs');
       }
