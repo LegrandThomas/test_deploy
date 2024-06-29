@@ -22,6 +22,6 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             cd ~/myapp || mkdir ~/myapp && cd ~/myapp
-            git clone https://github.com/username/repo.git . || git pull origin main
+            git clone https://github.com/LegrandThomas/test_deploy.git . || git pull origin main
             docker-compose down
             docker-compose up -d --build
