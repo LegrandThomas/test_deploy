@@ -1,12 +1,26 @@
-- name: Deploy to VPS
-  uses: appleboy/ssh-action@v0.1.8
-  with:
-    host: ${{ secrets.VPS_HOST }}
-    username: ${{ secrets.VPS_USERNAME }}
-    password: ${{ secrets.VPS_PASSWORD }}
-    port: ${{ secrets.VPS_PORT }}
-    script: |
-      cd ~/myapp || mkdir ~/myapp && cd ~/myapp
-      git clone https://github.com/LegrandThomas/test_deploy.git . || git pull origin main
-      docker-compose down
-      docker-compose up -d --build
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: SSH and deploy to VPS
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ~/myapp || (mkdir ~/myapp && cd ~/myapp)
+            git clone https://github.com/LegrandThomas/test_deploy.git . || (git fetch && git checkout origin/main)
+            docker-compose down
+            docker-compose up -d --build
