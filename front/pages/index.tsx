@@ -28,7 +28,7 @@ const Home = () => {
 
   return (
     <div>
-      <h1>List of Dogs</h1>
+      <h1>Liste des chiens</h1>
       <ul>
         {dogs.map((dog) => (
           <li key={dog.id}>{dog.name} - {dog.breed}</li>
