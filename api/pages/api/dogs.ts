@@ -12,11 +12,11 @@ const client = new Client({
 client.connect().catch(error => console.log(error));
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  await Cors(req, res, {
-    methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
-    origin: 'http://localhost:3000',
-    crossOrigin:'anonymous'
-  });
+  // await Cors(req, res, {
+  //   methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
+  //   origin: 'http://localhost:3000',
+  //   crossOrigin:'anonymous'
+  // });
 
   if (req.method === 'POST') {
     const { name, breed } = req.body;
