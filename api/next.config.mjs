@@ -25,3 +25,4 @@ const nextConfig = {devIndicators: {
 };
 
 export default nextConfig;
+ 
