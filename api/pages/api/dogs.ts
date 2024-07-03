@@ -9,7 +9,6 @@ const client = new Client({
   password: 'password',
 }); 
 
-
 client.connect().catch(error => console.log(error));
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
