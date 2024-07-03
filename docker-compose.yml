@@ -4,7 +4,7 @@ services:
     build: ./front
     restart: always
     ports:
-      - "8080:3000"  # Le front-end écoute sur le port 3000 en interne et est exposé sur le port 8080 sur l'hôte
+      - "3000:3000"  # Le front-end écoute sur le port 3000 en interne et est exposé sur le port 8080 sur l'hôte
     networks:
       - mynetwork
 
