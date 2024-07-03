@@ -17,7 +17,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   //   origin: 'http://localhost:3000',
   //   crossOrigin:'anonymous'
   // });
-
+ 
   if (req.method === 'POST') {
     const { name, breed } = req.body;
 
