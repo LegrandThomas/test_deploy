@@ -7,7 +7,7 @@ const client = new Client({
   database: 'base_test',
   user: 'postgres',
   password: 'password',
-});
+}); 
 
 client.connect().catch(error => console.log(error));
 
