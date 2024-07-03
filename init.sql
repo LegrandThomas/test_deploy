@@ -9,4 +9,5 @@ CREATE TABLE IF NOT EXISTS dogs (
 INSERT INTO dogs (name, breed) VALUES
     ('Fido', 'Labrador'),
     ('Peter', 'Pitbull'),
+    ('Maurice', 'Bouvier'),
     ('Buddy', 'Golden Retriever');
