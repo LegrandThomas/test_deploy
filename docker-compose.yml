@@ -12,7 +12,7 @@ services:
     build: ./api
     restart: always
     ports:
-      - "8181:3001"  # L'API est accessible via le port 8181 sur l'hôte
+      - "3001:3001"  # L'API est accessible via le port 3001 sur l'hôte
     environment:
       DATABASE_URL: postgres://postgres:password@postgres:5432/base_test
     depends_on:
