@@ -4,17 +4,21 @@ services:
     build: ./front
     restart: always
     ports:
-      - "8080:3000" #redirection port  
+      - "3000:3000"  # Le front-end tourne sur le port 3000 à l'intérieur du conteneur
+    networks:
+      - mynetwork
 
   api:
     build: ./api
     restart: always
     ports:
-      - "8181:3001"
+      - "3001:3001"  # L'API tourne sur le port 3001 à l'intérieur du conteneur
     environment:
       DATABASE_URL: postgres://postgres:password@postgres:5432/base_test
     depends_on:
       - postgres
+    networks:
+      - mynetwork
 
   postgres:
     image: postgres:latest
@@ -28,7 +32,25 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mynetwork
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "9018:8080"  # Nginx est exposé sur le port 9018
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
 
 volumes:
   postgres_data:
