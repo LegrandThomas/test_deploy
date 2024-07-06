@@ -8,6 +8,7 @@ services:
     networks:
       - mynetwork
 
+
   api:
     build: ./api
     restart: always
@@ -17,6 +18,8 @@ services:
       DATABASE_URL: postgres://postgres:password@postgres:5432/base_test
     depends_on:
       - postgres
+    volumes:
+    - ./api/__tests__:/usr/src/app
     networks:
       - mynetwork
 
