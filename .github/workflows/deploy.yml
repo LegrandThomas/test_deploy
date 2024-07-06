@@ -38,10 +38,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Dependencies
-        run: docker-compose exec thomas_api_1 npm install
+        run: docker exec thomas_api_1 npm install
 
       - name: Run Tests
-        run: docker-compose exec thomas_api_1 npm run test
+        run: docker exec thomas_api_1 npm run test
 
   deploy:
     runs-on: ubuntu-latest
