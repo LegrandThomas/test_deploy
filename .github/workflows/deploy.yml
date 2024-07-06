@@ -6,14 +6,14 @@ on:
       - main
 
 jobs:
-  build-test-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy, Build, Run, and Test on VPS
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -21,31 +21,81 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            # Change directory to the project folder or clone if it doesn't exist
-            cd ~/thomas || (mkdir ~/thomas && cd ~/thomas && git clone https://github.com/${{ github.repository }} .)
-
-            # Pull the latest changes
+            if [ ! -d ~/thomas ]; then
+              mkdir -p ~/thomas
+              git clone https://github.com/${{ github.repository }} ~/thomas
+            fi
+            cd ~/thomas
             git pull origin main
 
-            # Build Docker containers
+  build:
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Build Docker Containers
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ~/thomas
             sudo docker-compose down -v
             yes | sudo docker image prune -a
             sudo docker-compose build
 
-            # Start Docker containers
+  run:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Start Docker Containers
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ~/thomas
             sudo docker-compose up -d
 
-            # Wait for the API to be ready
+  wait-for-api:
+    runs-on: ubuntu-latest
+    needs: run
+
+    steps:
+      - name: Wait for API to be ready
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
             while ! curl -sSf http://localhost:3001/api/dogs > /dev/null; do
               echo "Waiting for API to be ready..."
               sleep 5
             done
             echo "API is ready!"
 
-            # Run Tests
+  test:
+    runs-on: ubuntu-latest
+    needs: wait-for-api
+
+    steps:
+      - name: Run Tests
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
             cd ~/thomas/api
-            if ! command -v npm &> /dev/null
-            then
+            if ! command -v npm &> /dev/null; then
               echo "npm could not be found, installing..."
               curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
               sudo apt-get install -y nodejs
@@ -53,11 +103,23 @@ jobs:
             npm install
             npm run test
 
-            # Check test results and finalize deployment if tests pass
-            if [ $? -eq 0 ]; then
-              echo "Tests passed, finalizing deployment..."
-              sudo docker-compose up -d
-            else
+            if [ $? -ne 0 ]; then
               echo "Tests failed, exiting with error."
               exit 1
             fi
+
+  finalize-deploy:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Finalize Deployment
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ~/thomas
+            sudo docker-compose up -d
