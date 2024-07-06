@@ -83,7 +83,7 @@ jobs:
               echo "Waiting for API to be ready..."
               sleep 5
             done
-            echo "API is ready!"
+            echo "API is ready!" 
 
       - name: Run Tests
         uses: appleboy/ssh-action@v0.1.8
