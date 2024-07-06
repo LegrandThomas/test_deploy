@@ -7,7 +7,6 @@ WORKDIR /usr/src/app
 # Copie des fichiers nécessaires
 COPY package*.json ./
 COPY next.config.mjs ./
-COPY __tests__ ./__tests__
 COPY pages ./pages
 
 # Installation des dépendances
