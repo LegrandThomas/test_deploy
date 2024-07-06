@@ -6,14 +6,14 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy to VPS
+      - name: Deploy, Build, Run, and Test on VPS
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -21,77 +21,43 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/thomas || mkdir ~/thomas && cd ~/thomas
+            # Change directory to the project folder or clone if it doesn't exist
+            cd ~/thomas || (mkdir ~/thomas && cd ~/thomas && git clone https://github.com/${{ github.repository }} .)
+
+            # Pull the latest changes
             git pull origin main
 
-  build:
-    runs-on: ubuntu-latest
-    needs: deploy
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Build Docker Containers
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            cd ~/thomas
+            # Build Docker containers
             sudo docker-compose down -v
+            yes | sudo docker image prune -a
             sudo docker-compose build
 
-  run:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Start Docker Containers
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            cd ~/thomas
+            # Start Docker containers
             sudo docker-compose up -d
 
-  test:
-    runs-on: ubuntu-latest
-    needs: run
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Wait for API to be ready
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
+            # Wait for the API to be ready
             while ! curl -sSf http://localhost:3001/api/dogs > /dev/null; do
               echo "Waiting for API to be ready..."
               sleep 5
             done
-            echo "API is ready!" 
+            echo "API is ready!"
 
-      - name: Run Tests
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
+            # Run Tests
             cd ~/thomas/api
+            if ! command -v npm &> /dev/null
+            then
+              echo "npm could not be found, installing..."
+              curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            npm install
             npm run test
+
+            # Check test results and finalize deployment if tests pass
+            if [ $? -eq 0 ]; then
+              echo "Tests passed, finalizing deployment..."
+              sudo docker-compose up -d
+            else
+              echo "Tests failed, exiting with error."
+              exit 1
+            fi
