@@ -46,8 +46,8 @@ jobs:
 
       - name: Run Tests
         run: |
-          docker exec thomas_api npm install --prefix ./api  # Install dependencies if needed
-          docker exec thomas_api npm run test
+          docker exec thomas_api_1 npm install --prefix ./api  # Install dependencies if needed
+          docker exec thomas_api_1 npm run test
 
   deploy:
     runs-on: ubuntu-latest
