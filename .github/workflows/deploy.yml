@@ -79,7 +79,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            while ! curl -sSf http://localhost:3001 > /dev/null; do
+            while ! curl -sSf http://localhost:3001/api/dogs > /dev/null; do
               echo "Waiting for API to be ready..."
               sleep 5
             done
