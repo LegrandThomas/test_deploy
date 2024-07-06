@@ -11,7 +11,7 @@ COPY __tests__ ./__tests__
 COPY pages ./pages
 
 # Installation des dépendances
-RUN npm install --production
+RUN npm install 
 
 # Construction de l'api
 RUN npm run build

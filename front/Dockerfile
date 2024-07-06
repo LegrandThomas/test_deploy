@@ -10,7 +10,7 @@ COPY next.config.mjs ./
 COPY pages ./pages
 
 # Installation des dépendances
-RUN npm install --production
+RUN npm install 
 
 # Construction de l'application frontend
 RUN npm run build

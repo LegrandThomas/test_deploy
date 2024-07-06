@@ -93,5 +93,5 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/thomas
+            cd ~/thomas/api
             npm run test
