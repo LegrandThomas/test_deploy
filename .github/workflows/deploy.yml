@@ -43,8 +43,8 @@ jobs:
 
       - name: Run tests
         run: |
-          docker-compose exec api npm run test || true
-          docker-compose logs api
+          docker-compose exec thomas_api_1 npm run test || true
+          docker-compose logs thomas_api_1
 
       - name: Stop Docker containers
         if: always()
