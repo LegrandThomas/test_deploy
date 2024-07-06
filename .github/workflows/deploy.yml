@@ -1,4 +1,4 @@
-name: Build, Test and Deploy
+name: Deploy, Build, Run and Test
 
 on:
   push:
@@ -6,52 +6,8 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Pull from Git origin
-        run: git pull origin main
-
-      - name: Build Docker Containers
-        run: |
-          docker-compose down -v
-          docker-compose pull  # Pull latest images if any
-          docker-compose build
-
-  run:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Start Docker Containers
-        run: docker-compose up -d --build
-
-  test:
-    runs-on: ubuntu-latest
-    needs: run
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # - name: Wait for containers to start
-      #   run: sleep 30s  # Adjust based on your application startup time
-
-      - name: Run Tests
-        run: |
-          docker exec thomas_api_1 npm install --prefix ./api  # Install dependencies if needed
-          docker exec thomas_api_1 npm run test
-
   deploy:
     runs-on: ubuntu-latest
-    needs: test
 
     steps:
       - name: Checkout code
@@ -70,3 +26,43 @@ jobs:
             sudo docker-compose down -v
             sudo docker image prune -a
             sudo docker-compose up -d --build
+
+  build:
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Docker Containers
+        run: |
+          docker-compose pull
+          docker-compose build
+
+  run:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Start Docker Containers
+        run: docker-compose up -d
+
+      - name: Wait for containers to start
+        run: sleep 30s  # Adjust based on your application startup time
+
+  test:
+    runs-on: ubuntu-latest
+    needs: run
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies and Run Tests
+        run: |
+          docker exec thomas_api_1 npm install --prefix ./api
+          docker exec thomas_api_1 npm run test
