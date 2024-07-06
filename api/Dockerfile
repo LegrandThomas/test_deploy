@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 3001
 
 # Commande pour démarrer l'API
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start"] || ["npm", "run", "test"]
