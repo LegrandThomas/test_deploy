@@ -39,7 +39,7 @@ jobs:
           sudo docker image prune -a
             
 
-  run and test:
+  run:
     runs-on: ubuntu-latest
     needs: build
 
