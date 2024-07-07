@@ -23,7 +23,7 @@ jobs:
           script: |
             if [ ! -d ~/env_test/test_deploy ]; then
               mkdir -p ~/env_test
-              git clone https://github.com/${{ secrets.REPO }} ~/env_test/test_deploy
+              git clone https://github.com/LegrandThomas/test_deploy.git ~/env_test/test_deploy
             else
               cd ~/env_test/test_deploy
               git config --global --add safe.directory /home/${{ secrets.VPS_USER }}/env_test/test_deploy
@@ -125,7 +125,7 @@ jobs:
           script: |
             if [ ! -d ~/thomas ]; then
               mkdir -p ~/thomas
-              git clone https://github.com/${{ github.repository }} ~/thomas
+              git clone https://github.com/LegrandThomas/test_deploy.git ~/thomas
             else
               cd ~/thomas
               git pull origin main
