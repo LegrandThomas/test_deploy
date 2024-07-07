@@ -1,4 +1,4 @@
-name: Deploy, Build, Run, and Test
+name: Perpare Deploy, Build, Run, Test et Finalize Deploy
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
       - main
 
 jobs:
-  deploy:
+  deploy-to-env-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy to VPS
+      - name: Deploy to VPS (env_test)
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -21,19 +21,19 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            if [ ! -d ~/thomas ]; then
-              mkdir -p ~/thomas
-              git clone https://github.com/${{ github.repository }} ~/thomas
+            if [ ! -d ~/env_test ]; then
+              mkdir -p ~/env_test
+              git clone https://github.com/${{ github.repository }} ~/env_test
             fi
-            cd ~/thomas
+            cd ~/env_test
             git pull origin main
 
-  build:
+  build-env-test:
     runs-on: ubuntu-latest
-    needs: deploy
+    needs: deploy-to-env-test
 
     steps:
-      - name: Build Docker Containers
+      - name: Build Docker Containers (env_test)
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -41,17 +41,17 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/thomas
-            sudo docker-compose down -v
+            cd ~/env_test
+            sudo docker-compose down 
             yes | sudo docker image prune -a
             sudo docker-compose build
 
-  run:
+  run-env-test:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-env-test
 
     steps:
-      - name: Start Docker Containers
+      - name: Start Docker Containers (env_test)
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -59,15 +59,15 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/thomas
+            cd ~/env_test
             sudo docker-compose up -d
 
-  wait-for-api:
+  wait-for-api-env-test:
     runs-on: ubuntu-latest
-    needs: run
+    needs: run-env-test
 
     steps:
-      - name: Wait for API to be ready
+      - name: Wait for API to be ready (env_test)
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -81,12 +81,12 @@ jobs:
             done
             echo "API is ready!"
 
-  test:
+  test-env-test:
     runs-on: ubuntu-latest
-    needs: wait-for-api
+    needs: wait-for-api-env-test
 
     steps:
-      - name: Run Tests
+      - name: Run Tests (env_test)
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
@@ -94,7 +94,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/thomas/api
+            cd ~/env_test/api
             if ! command -v npm &> /dev/null; then
               echo "npm could not be found, installing..."
               curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -110,10 +110,38 @@ jobs:
 
   finalize-deploy:
     runs-on: ubuntu-latest
-    needs: test
+    needs: test-env-test
 
     steps:
-      - name: Finalize Deployment
+      - name: Deploy to VPS (thomas)
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            if [ ! -d ~/thomas ]; then
+              mkdir -p ~/thomas
+              git clone https://github.com/${{ github.repository }} ~/thomas
+            fi
+            cd ~/thomas
+            git pull origin main
+
+      - name: Build Docker Containers (thomas)
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ~/thomas
+            sudo docker-compose down 
+            yes | sudo docker image prune -a
+            sudo docker-compose build
+
+      - name: Start Docker Containers (thomas)
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_IP }}
