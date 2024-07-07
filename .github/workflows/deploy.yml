@@ -104,10 +104,13 @@ jobs:
             fi
             sudo npm install
             sudo npm run test
-
+            
             if [ $? -ne 0 ]; then
               echo "Tests failed, exiting with error."
               exit 1
+            else
+              sudo docker-compose down
+              yes | sudo docker image prune -a 
             fi
 
   finalize-deploy:
