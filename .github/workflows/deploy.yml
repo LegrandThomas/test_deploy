@@ -23,11 +23,11 @@ jobs:
           script: |
             if [ ! -d ~/env_test/test_deploy ]; then
               mkdir -p ~/env_test
-              git clone https://github.com/LegrandThomas/test_deploy.git ~/env_test/test_deploy
+             sudo git clone https://github.com/LegrandThomas/test_deploy.git ~/env_test/test_deploy
             else
               cd ~/env_test/test_deploy
-              git config --global --add safe.directory /home/${{ secrets.VPS_USER }}/env_test/test_deploy
-              git pull origin main
+              sudo git config --global --add safe.directory /home/${{ secrets.VPS_USER }}/env_test/test_deploy
+              sudo git pull origin main
             fi
 
   build-env-test:
