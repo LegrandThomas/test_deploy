@@ -21,10 +21,6 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            if [ ! -d ~/env_test ]; then
-              mkdir -p ~/env_test
-              git clone https://github.com/${{ secrets.REPO }} ~/env_test
-            fi
             cd ~/env_test
             git pull origin main
 
@@ -121,10 +117,6 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            if [ ! -d ~/thomas ]; then
-              mkdir -p ~/thomas
-              git clone https://github.com/${{ secrets.REPO }} ~/thomas
-            fi
             cd ~/thomas
             git pull origin main
 
