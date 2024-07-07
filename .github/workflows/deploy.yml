@@ -21,11 +21,11 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            sudo docker stop $(sudo docker ps -a -q)
+            sudo docker rm $(sudo docker ps -a -q)
             if [ ! -d ~/env_test/test_deploy ]; then
-            sudo docker stop $(docker ps -a -q)
-            sudo docker rm $(docker ps -a -q)
               mkdir -p ~/env_test
-             sudo git clone https://github.com/LegrandThomas/test_deploy.git ~/env_test/test_deploy
+              sudo git clone https://github.com/LegrandThomas/test_deploy.git ~/env_test/test_deploy
             else
               cd ~/env_test/test_deploy
               sudo git config --global --add safe.directory /home/${{ secrets.VPS_USER }}/env_test/test_deploy
