@@ -21,14 +21,9 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            if [ ! -d ~/env_test/test_deploy ]; then
-              mkdir -p ~/env_test
-              git clone https://github.com/${{ github.repository }} ~/env_test/test_deploy
-            else
               cd ~/env_test/test_deploy
               git pull origin main
-            fi
-
+            
   build-env-test:
     runs-on: ubuntu-latest
     needs: deploy-to-env-test
