@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-              cd ~/env_test/test_deploy
+              cd ~/env_test
               git pull origin main
             
   build-env-test:
@@ -37,7 +37,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/env_test/test_deploy
+            cd ~/env_test
             sudo docker-compose down -v
             yes | sudo docker image prune -a
             sudo docker-compose build
@@ -55,7 +55,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/env_test/test_deploy
+            cd ~/env_test
             sudo docker-compose up -d
 
   wait-for-api-env-test:
@@ -90,7 +90,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd ~/env_test/test_deploy/api
+            cd ~/env_test/api
             if ! command -v npm &> /dev/null; then
               echo "npm could not be found, installing..."
               curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
