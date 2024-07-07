@@ -23,7 +23,7 @@ jobs:
           script: |
             if [ ! -d ~/env_test ]; then
               mkdir -p ~/env_test
-              git clone https://github.com/${{ REPO }} ~/env_test
+              git clone https://github.com/${{ repo }} ~/env_test
             fi
             cd ~/env_test
             git pull origin main
@@ -123,7 +123,7 @@ jobs:
           script: |
             if [ ! -d ~/thomas ]; then
               mkdir -p ~/thomas
-              git clone https://github.com/${{ github.REPO }} ~/thomas
+              git clone https://github.com/${{ repo }} ~/thomas
             fi
             cd ~/thomas
             git pull origin main
