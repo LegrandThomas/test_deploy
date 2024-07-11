@@ -48,7 +48,7 @@ jobs:
             cd ~/env_test/test_deploy
             sudo docker-compose down 
             yes | sudo docker image prune -a
-            sudo docker-compose build
+            sudo docker-compose build --parallel
 
   run-env-test:
     runs-on: ubuntu-latest
@@ -149,7 +149,7 @@ jobs:
             cd ~/thomas
             sudo docker-compose down 
             yes | sudo docker image prune -a
-            sudo docker-compose build
+            sudo docker-compose build --parallel
 
       - name: Start Docker Containers (thomas)
         uses: appleboy/ssh-action@v0.1.8

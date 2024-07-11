@@ -4,7 +4,7 @@ services:
     build: ./front
     restart: always
     ports:
-      - "3000:3000"  # Le front-end écoute sur le port 3000 en interne et est exposé sur le port 8080 sur l'hôte
+      - "3000:3000"  
     networks:
       - mynetwork
 
@@ -13,7 +13,7 @@ services:
     build: ./api
     restart: always
     ports:
-      - "3001:3001"  # L'API est accessible via le port 3001 sur l'hôte
+      - "3001:3001"  
     environment:
       DATABASE_URL: postgres://postgres:password@postgres:5432/base_test
     depends_on:
@@ -22,7 +22,7 @@ services:
       - mynetwork 
 
   postgres:
-    image: postgres:latest
+    image: postgres:alpine
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -38,7 +38,7 @@ services:
       - mynetwork
 
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     ports:
       - "8080:8080"
     volumes:

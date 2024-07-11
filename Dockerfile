@@ -1,5 +1,5 @@
 
-FROM postgres:latest
+FROM postgres:alpine
 
 
 ENV POSTGRES_USER=postgres
