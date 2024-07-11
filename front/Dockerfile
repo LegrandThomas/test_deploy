@@ -1,22 +1,33 @@
-# Utilisation de l'image Node.js LTS comme base
-FROM node:20-alpine
+# Étape de build
+FROM node:20-alpine AS build
 
-# Création du répertoire de travail
+# Définir le répertoire de travail
 WORKDIR /usr/src/app
 
-# Copie des fichiers nécessaires
+# Copier les fichiers de dépendances
 COPY package*.json ./
+
+# Installer les dépendances
+RUN npm install 
+
+# Copier les fichiers de source et de configuration
 COPY next.config.mjs ./
 COPY pages ./pages
 
-# Installation des dépendances
-RUN npm install 
-
-# Construction de l'application frontend
+# Construire l'application
 RUN npm run build
 
-# Exposition du port nécessaire pour le frontend
+# Étape finale
+FROM node:20-alpine
+
+# Définir le répertoire de travail
+WORKDIR /usr/src/app
+
+# Copier uniquement les artefacts nécessaires depuis l'étape de build
+COPY --from=build /usr/src/app ./
+
+# Exposer le port nécessaire
 EXPOSE 3000
 
-# Commande pour démarrer le serveur frontend
+# Commande pour démarrer l'application
 CMD ["npm", "run", "start"]
