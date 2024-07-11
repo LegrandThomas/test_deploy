@@ -42,9 +42,9 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_LISTEN_PORT: 5050  # Utilisation du port 5050 pour pgAdmin
+      PGADMIN_LISTEN_PORT: 5433  # Utilisation du port 5050 pour pgAdmin
     ports:
-      - "5050:5050"  # Mapping du port 5050 du conteneur vers le port 5050 de l'hôte
+      - "5433:5433"  # Mapping du port 5050 du conteneur vers le port 5050 de l'hôte
     depends_on:
       - postgres
     networks:
