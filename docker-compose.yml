@@ -47,6 +47,8 @@ services:
       - "5433:5433"
     volumes:
       - pgadmin_static:/pgadmin4/pgadmin/static  # Ajout du volume pour les fichiers statiques
+      - pgadmin_browser:/pgadmin4/pgadmin/browser  # Ajout du volume pour les fichiers browser
+      - pgadmin_tools:/pgadmin4/pgadmin/tools  # Ajout du volume pour les fichiers tools
     depends_on:
       - postgres
     networks:
@@ -73,3 +75,5 @@ networks:
 volumes:
   postgres_data:
   pgadmin_static:  # Définition du volume pour les fichiers statiques de pgAdmin
+  pgadmin_browser:
+  pgadmin_tools:
