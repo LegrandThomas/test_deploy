@@ -19,7 +19,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - mynetwork
+      - mynetwork 
 
   postgres:
     image: postgres:latest
