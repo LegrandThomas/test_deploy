@@ -44,7 +44,9 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_LISTEN_PORT: 5433  # Utilisation du port 5433 pour pgAdmin
     ports:
-      - "5433:5433"  # Mapping du port 5050 du conteneur vers le port 5433 de l'hôte
+      - "5433:5433"
+    volumes:
+      - pgadmin_static:/pgadmin4/pgadmin/static  # Ajout du volume pour les fichiers statiques
     depends_on:
       - postgres
     networks:
@@ -56,9 +58,11 @@ services:
       - "8080:8080"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - pgadmin_static:/pgadmin4/pgadmin/static  # Montage du volume des fichiers statiques dans Nginx
     depends_on:
       - frontend
       - api
+      - pgadmin
     networks:
       - mynetwork
 
@@ -68,3 +72,4 @@ networks:
 
 volumes:
   postgres_data:
+  pgadmin_static:  # Définition du volume pour les fichiers statiques de pgAdmin
