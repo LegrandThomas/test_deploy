@@ -61,6 +61,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - pgadmin_static:/pgadmin4/pgadmin/static  # Montage du volume des fichiers statiques dans Nginx
+      - pgadmin_browser:/pgadmin4/pgadmin/browser  #  Montage du volume des fichiers browser dans Nginx
+      - pgadmin_tools:/pgadmin4/pgadmin/tools  #  Montage du volume des fichiers tools dans Nginx
     depends_on:
       - frontend
       - api
