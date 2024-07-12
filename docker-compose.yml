@@ -42,13 +42,13 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_LISTEN_PORT: 5433  # Utilisation du port 5433 pour pgAdmin
+      PGADMIN_LISTEN_PORT: 5433
     ports:
       - "5433:5433"
     volumes:
-      - pgadmin_static:/pgadmin4/pgadmin/static  # Ajout du volume pour les fichiers statiques
-      - pgadmin_browser:/pgadmin4/pgadmin/browser  # Ajout du volume pour les fichiers browser
-      - pgadmin_tools:/pgadmin4/pgadmin/tools  # Ajout du volume pour les fichiers tools
+      - pgadmin_static:/pgadmin4/pgadmin/static
+      - pgadmin_browser:/pgadmin4/pgadmin/browser
+      - pgadmin_tools:/pgadmin4/pgadmin/tools
     depends_on:
       - postgres
     networks:
@@ -60,9 +60,9 @@ services:
       - "8080:8080"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - pgadmin_static:/pgadmin4/pgadmin/static  # Montage du volume des fichiers statiques dans Nginx
-      - pgadmin_browser:/pgadmin4/pgadmin/browser  #  Montage du volume des fichiers browser dans Nginx
-      - pgadmin_tools:/pgadmin4/pgadmin/tools  #  Montage du volume des fichiers tools dans Nginx
+      - pgadmin_static:/pgadmin4/pgadmin/static
+      - pgadmin_browser:/pgadmin4/pgadmin/browser
+      - pgadmin_tools:/pgadmin4/pgadmin/tools
     depends_on:
       - frontend
       - api
@@ -76,6 +76,6 @@ networks:
 
 volumes:
   postgres_data:
-  pgadmin_static:  # Définition du volume pour les fichiers statiques de pgAdmin
+  pgadmin_static:
   pgadmin_browser:
   pgadmin_tools:
