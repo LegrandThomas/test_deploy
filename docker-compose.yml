@@ -48,7 +48,7 @@ services:
     volumes:
       - pgadmin_static:/pgadmin4/pgadmin/static
       - pgadmin_browser:/pgadmin4/pgadmin/browser/templates/browser
-      - pgadmin_tools:/pgadmin4/pgadmin/tools/templates/js
+      - pgadmin_tools:/pgadmin4/pgadmin/tools/templates/js/js
     depends_on:
       - postgres
     networks:
@@ -62,7 +62,7 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - pgadmin_static:/pgadmin4/pgadmin/static
       - pgadmin_browser:/pgadmin4/pgadmin/browser/templates/browser
-      - pgadmin_tools:/pgadmin4/pgadmin/tools/templates/js
+      - pgadmin_tools:/pgadmin4/pgadmin/tools/templates/js/js
     depends_on:
       - frontend
       - api
