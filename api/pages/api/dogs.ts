@@ -38,7 +38,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
   } else if (req.method === 'GET') {
     try {
-      const result = await client.query('SELECT * FROM roles');
+      const result = await client.query('SELECT * FROM dogs');
       res.status(200).json(result.rows);
     } catch (err) {
       console.error(err);
