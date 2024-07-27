@@ -111,8 +111,8 @@ jobs:
               exit 1
             else
               sudo docker-compose down
-              cd ~/thomas
-              sudo docker-compose up -d 
+              cd ~/env_test
+              sudo rm -rf ~/env_test
             fi
 
   finalize-deploy-on-production:
