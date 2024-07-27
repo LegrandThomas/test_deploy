@@ -4,15 +4,12 @@ FROM node:20-alpine AS build
 # Définir le répertoire de travail
 WORKDIR /usr/src/app
 
-# Copier les fichiers de dépendances
+# Copier les fichiers de dépendances et installer les dépendances
 COPY package*.json ./
-
-# Installer les dépendances
-RUN npm install 
+RUN npm install --production
 
 # Copier les fichiers de source et de configuration
-COPY next.config.mjs ./
-COPY pages ./pages
+COPY . .
 
 # Construire l'application
 RUN npm run build
