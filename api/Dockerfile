@@ -26,5 +26,5 @@ COPY --from=build /usr/src/app ./
 # Exposer le port nécessaire pour l'API
 EXPOSE 3001
 
-# Commande pour démarrer l'API
-CMD ["npm", "run", "start"]
+# Ajouter le script de migration au démarrage
+CMD ["sh", "-c", "npx ts-node ./run-migrations.ts && npm start"]

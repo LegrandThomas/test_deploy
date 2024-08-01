@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start -p 3001",
     "test": "jest --verbose",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
+    "migration:generate": "npm run typeorm -- migration:generate ./migration/InitialMigration -d ./data-source.ts",
+    "migration:run": "npm run typeorm -- migration:run -d ./data-source.ts",
+    "build:migrations": "tsc -p tsconfig.migrations.json"
   },
   "dependencies": {
     "@types/jest": "^29.5.12",
@@ -18,10 +22,14 @@
     "pg": "^8.12.0",
     "react": "^18",
     "react-dom": "^18",
-    "ts-jest": "^29.1.5"
+    "reflect-metadata": "^0.2.2",
+    "ts-jest": "^29.1.5",
+    "tsconfig-paths": "^4.2.0",
+    "typeorm": "^0.3.20",
+    "winston": "^3.13.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^20.14.13",
     "@types/pg": "^8.11.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -30,16 +38,15 @@
     "node-mocks-http": "^1.15.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   },
   "jest": {
-  "preset": "ts-jest",
-  "testEnvironment": "node",
-  "testMatch": [
-    "**/__tests__/**/*.ts?(x)",
-    "**/?(*.)+(spec|test).ts?(x)"
-  ]
-}
-
-
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.ts?(x)",
+      "**/?(*.)+(spec|test).ts?(x)"
+    ]
+  }
 }

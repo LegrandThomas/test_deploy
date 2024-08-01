@@ -7,7 +7,4 @@ ENV POSTGRES_PASSWORD=password
 ENV POSTGRES_DB=base_test
 
 
-COPY init.sql /docker-entrypoint-initdb.d/
-
-
 EXPOSE 5432
