@@ -18,8 +18,8 @@ import { SharingSession } from './sharingSession';
 import { Follow } from './follow';
 
 @Entity('users')
-@Unique(["email"]) // Contrainte d'unicité pour l'email
-@Unique(["username"]) // Contrainte d'unicité pour le username (si nécessaire)
+@Unique(["email"])
+@Unique(["username"]) 
 export class User {
   @PrimaryGeneratedColumn('uuid')
   user_uuid!: string;
