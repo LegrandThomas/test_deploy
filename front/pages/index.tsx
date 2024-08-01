@@ -1,37 +1,37 @@
 import { useEffect, useState } from 'react';
 
-interface Dog {
-  id: number;
-  name: string;
-  breed: string;
+interface User {
+  user_uuid: string;
+  username: string;
+  email: string;
 }
 
 const Home = () => {
-  const [dogs, setDogs] = useState<Dog[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    fetchDogs();
+    fetchUsers();
   }, []);
 
-  const fetchDogs = async () => {
+  const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/dogs');
+      const response = await fetch('/api/users');
       if (!response.ok) {
-        throw new Error('Failed to fetch dogs');
+        throw new Error('Failed to fetch users');
       }
       const data = await response.json();
-      setDogs(data);
+      setUsers(data);
     } catch (error) {
-      console.error('Error fetching dogs:', error);
+      console.error('Error fetching users:', error);
     }
   };
 
   return (
     <div>
-      <h1>Liste des chiens</h1>
+      <h1>Liste des utilisateurs</h1>
       <ul>
-        {dogs.map((dog) => (
-          <li key={dog.id}>{dog.name} - {dog.breed}</li>
+        {users.map((user) => (
+          <li key={user.user_uuid}>{user.username} - {user.email}</li>
         ))}
       </ul>
     </div>

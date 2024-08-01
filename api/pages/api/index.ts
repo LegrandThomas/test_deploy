@@ -15,20 +15,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   await Cors(req, res, {
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
     origin: 'http://localhost:3000',
-    crossOrigin:'anonymous'
+    crossOrigin: 'anonymous'
   });
  
   if (req.method === 'POST') {
-    const { name, breed } = req.body;
+    const { username, email, password, is_active } = req.body;
 
-    if (!name || !breed  === undefined) {
-      return res.status(400).json({ error: 'Name, breed are required' });
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
     try {
       const result = await client.query(
-        'INSERT INTO dogs (name, breed) VALUES ($1, $2) RETURNING *',
-        [name, breed]
+        'INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
+        [username, email, password, is_active ?? true]
       );
 
       res.status(201).json(result.rows[0]);
@@ -38,27 +38,27 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
   } else if (req.method === 'GET') {
     try {
-      const result = await client.query('SELECT * FROM dogs');
+      const result = await client.query('SELECT * FROM users');
       res.status(200).json(result.rows);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'PUT') {
-    const { id, name, breed} = req.body;
+    const { user_uuid, username, email, password, is_active } = req.body;
 
-    if (!id || !name || !breed  === undefined) {
-      return res.status(400).json({ error: 'ID, name, breed are required' });
+    if (!user_uuid || !username || !email) {
+      return res.status(400).json({ error: 'User UUID, username, and email are required' });
     }
 
     try {
       const result = await client.query(
-        'UPDATE dogs SET name = $1, breed = $2 WHERE id = $3 RETURNING *',
-        [name, breed, id]
+        'UPDATE users SET username = $1, email = $2, password = $3, is_active = $4 WHERE user_uuid = $5 RETURNING *',
+        [username, email, password, is_active ?? true, user_uuid]
       );
 
       if (result.rowCount === 0) {
-        return res.status(404).json({ error: 'Dog not found' });
+        return res.status(404).json({ error: 'User not found' });
       }
 
       res.status(200).json(result.rows[0]);
@@ -67,40 +67,47 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'PATCH') {
-    const { id, name, breed } = req.body;
+    const { user_uuid, username, email, password, is_active } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ error: 'ID is required' });
+    if (!user_uuid) {
+      return res.status(400).json({ error: 'User UUID is required' });
     }
 
     const fields = [];
     const values = [];
     let index = 1;
 
-    if (name) {
-      fields.push(`name = $${index++}`);
-      values.push(name);
+    if (username) {
+      fields.push(`username = $${index++}`);
+      values.push(username);
     }
-    if (breed) {
-      fields.push(`breed = $${index++}`);
-      values.push(breed);
+    if (email) {
+      fields.push(`email = $${index++}`);
+      values.push(email);
     }
-    
+    if (password) {
+      fields.push(`password = $${index++}`);
+      values.push(password);
+    }
+    if (is_active !== undefined) {
+      fields.push(`is_active = $${index++}`);
+      values.push(is_active);
+    }
 
     if (fields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    values.push(id);
+    values.push(user_uuid);
 
     try {
       const result = await client.query(
-        `UPDATE dogs SET ${fields.join(', ')} WHERE id = $${index} RETURNING *`,
+        `UPDATE users SET ${fields.join(', ')} WHERE user_uuid = $${index} RETURNING *`,
         values
       );
 
       if (result.rowCount === 0) {
-        return res.status(404).json({ error: 'Dog not found' });
+        return res.status(404).json({ error: 'User not found' });
       }
 
       res.status(200).json(result.rows[0]);
@@ -109,23 +116,23 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'DELETE') {
-    const { id } = req.body;
+    const { user_uuid } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ error: 'ID is required' });
+    if (!user_uuid) {
+      return res.status(400).json({ error: 'User UUID is required' });
     }
 
     try {
       const result = await client.query(
-        'DELETE FROM dogs WHERE id = $1 RETURNING *',
-        [id]
+        'DELETE FROM users WHERE user_uuid = $1 RETURNING *',
+        [user_uuid]
       );
 
       if (result.rowCount === 0) {
-        return res.status(404).json({ error: 'Dog not found' });
+        return res.status(404).json({ error: 'User not found' });
       }
 
-      res.status(200).json({ message: 'Dog deleted successfully' });
+      res.status(200).json({ message: 'User deleted successfully' });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Internal Server Error' });
