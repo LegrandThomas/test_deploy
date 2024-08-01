@@ -7,7 +7,7 @@ const client = new Client({
   database: 'base_test',
   user: 'postgres',
   password: 'password',
-}); 
+});
 
 client.connect().catch(error => console.log(error));
 
@@ -17,18 +17,25 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     origin: 'http://localhost:3000',
     crossOrigin: 'anonymous'
   });
- 
+  
   if (req.method === 'POST') {
-    const { username, email, password, is_active } = req.body;
+    const { username, email, password, is_active, role_uuid } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Username, email, and password are required' });
+    if (!username || !email || !password || !role_uuid) {
+      return res.status(400).json({ error: 'Username, email, password, and role UUID are required' });
     }
 
     try {
+      // Check if the role_uuid exists in the roles table
+      const roleResult = await client.query('SELECT * FROM roles WHERE role_uuid = $1', [role_uuid]);
+      if (roleResult.rowCount === 0) {
+        return res.status(400).json({ error: 'Invalid role UUID' });
+      }
+
+      // Insert the new user
       const result = await client.query(
-        'INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
-        [username, email, password, is_active ?? true]
+        'INSERT INTO users (username, email, password, is_active, role_uuid) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [username, email, password, is_active ?? true, role_uuid]
       );
 
       res.status(201).json(result.rows[0]);
@@ -45,16 +52,23 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'PUT') {
-    const { user_uuid, username, email, password, is_active } = req.body;
+    const { user_uuid, username, email, password, is_active, role_uuid } = req.body;
 
-    if (!user_uuid || !username || !email) {
-      return res.status(400).json({ error: 'User UUID, username, and email are required' });
+    if (!user_uuid || !username || !email || !role_uuid) {
+      return res.status(400).json({ error: 'User UUID, username, email, and role UUID are required' });
     }
 
     try {
+      // Check if the role_uuid exists in the roles table
+      const roleResult = await client.query('SELECT * FROM roles WHERE role_uuid = $1', [role_uuid]);
+      if (roleResult.rowCount === 0) {
+        return res.status(400).json({ error: 'Invalid role UUID' });
+      }
+
+      // Update the user
       const result = await client.query(
-        'UPDATE users SET username = $1, email = $2, password = $3, is_active = $4 WHERE user_uuid = $5 RETURNING *',
-        [username, email, password, is_active ?? true, user_uuid]
+        'UPDATE users SET username = $1, email = $2, password = $3, is_active = $4, role_uuid = $5 WHERE user_uuid = $6 RETURNING *',
+        [username, email, password, is_active ?? true, role_uuid, user_uuid]
       );
 
       if (result.rowCount === 0) {
@@ -67,7 +81,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'PATCH') {
-    const { user_uuid, username, email, password, is_active } = req.body;
+    const { user_uuid, username, email, password, is_active, role_uuid } = req.body;
 
     if (!user_uuid) {
       return res.status(400).json({ error: 'User UUID is required' });
@@ -92,6 +106,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (is_active !== undefined) {
       fields.push(`is_active = $${index++}`);
       values.push(is_active);
+    }
+    if (role_uuid) {
+      // Check if the role_uuid exists in the roles table
+      const roleResult = await client.query('SELECT * FROM roles WHERE role_uuid = $1', [role_uuid]);
+      if (roleResult.rowCount === 0) {
+        return res.status(400).json({ error: 'Invalid role UUID' });
+      }
+
+      fields.push(`role_uuid = $${index++}`);
+      values.push(role_uuid);
     }
 
     if (fields.length === 0) {
