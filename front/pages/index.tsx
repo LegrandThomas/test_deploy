@@ -15,7 +15,7 @@ const Home = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch('/api/dogs');
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
