@@ -1,28 +1,9 @@
 import Cors from 'nextjs-cors';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Client, QueryResult } from 'pg';
+import { connectToDatabase } from '../../utils/database';
+import { User } from '../../entity/user'; // Assurez-vous que le chemin est correct
+import { Roles } from '../../entity/role'; // Assurez-vous que le chemin est correct
 
-// Initialise la connexion à la base de données
-const client = new Client({
-  host: 'postgres',
-  database: 'base_test',
-  user: 'postgres',
-  password: 'password',
-});
-
-client.connect().catch(error => console.error('Failed to connect to the database:', error));
-
-// Fonction utilitaire pour vérifier le résultat de la requête
-const getRowCount = (result: QueryResult<any>) => {
-  return result?.rowCount ?? 0;
-};
-
-// Fonction utilitaire pour vérifier si des résultats existent
-const hasRows = (result: QueryResult<any>) => {
-  return getRowCount(result) > 0;
-};
-
-// Fonction principale pour traiter les requêtes API
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   await Cors(req, res, {
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
@@ -30,197 +11,219 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     crossOrigin: 'anonymous'
   });
 
-  try {
-    if (req.method === 'POST') {
-      const { username, email, password, is_active, role_uuid } = req.body;
+  const dataSource = await connectToDatabase();
+  const userRepository = dataSource.getRepository(User);
+  const roleRepository = dataSource.getRepository(Roles);
 
-      if (!username || !email || !password || !role_uuid) {
-        return res.status(400).json({ error: 'Username, email, password, and role UUID are required' });
-      }
+  if (req.method === 'POST') {
+    const { username, email, password, is_active, role_uuid } = req.body;
 
-      // Vérifie si le role_uuid existe dans la table des rôles
-      const roleResult = await client.query('SELECT * FROM roles WHERE role_uuid = $1', [role_uuid]);
-      if (!hasRows(roleResult)) {
+    if (!username || !email || !password || !role_uuid) {
+      return res.status(400).json({ error: 'Username, email, password, and role UUID are required' });
+    }
+
+    try {
+      const role = await roleRepository.findOne({ where: { role_uuid } });
+
+      if (!role) {
         return res.status(400).json({ error: 'Invalid role UUID' });
       }
 
-      // Vérifie si le nom d'utilisateur ou l'email existe déjà
-      const existingUser = await client.query(
-        'SELECT * FROM users WHERE username = $1 OR email = $2',
-        [username, email]
-      );
+      const existingUser = await userRepository.findOne({
+        where: [
+          { email },
+          { username }
+        ]
+      });
 
-      if (hasRows(existingUser)) {
-        const user = existingUser.rows[0];
-        if (user.username === username) {
-          return res.status(400).json({ error: 'Username is already in use' });
-        }
-        if (user.email === email) {
+      if (existingUser) {
+        if (existingUser.email === email) {
           return res.status(400).json({ error: 'Email is already in use' });
         }
+        if (existingUser.username === username) {
+          return res.status(400).json({ error: 'Username is already in use' });
+        }
       }
 
-      // Insère le nouvel utilisateur
-      const result = await client.query(
-        'INSERT INTO users (username, email, password, is_active, role_uuid) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [username, email, password, is_active ?? true, role_uuid]
-      );
+      const user = new User();
+      user.username = username;
+      user.email = email;
+      user.password = password;
+      user.is_active = is_active ?? true;
+      user.role = role;
 
-      res.status(201).json(result.rows[0]);
+      const result = await userRepository.save(user);
+      res.status(201).json(result);
+    } catch (err) {
+      console.error(err);
 
-    } else if (req.method === 'GET') {
-      const result = await client.query('SELECT * FROM users');
-      res.status(200).json(result.rows);
-
-    } else if (req.method === 'PUT') {
-      const { user_uuid, username, email, password, is_active, role_uuid } = req.body;
-
-      if (!user_uuid || !username || !email || !role_uuid) {
-        return res.status(400).json({ error: 'User UUID, username, email, and role UUID are required' });
+      // Vérifiez si err est une instance d'Error
+      if (err instanceof Error) {
+        // Ici vous pouvez gérer les erreurs spécifiques
+        if (err.message.includes('unique constraint')) {
+          return res.status(400).json({ error: 'Email or Username already in use' });
+        }
+        return res.status(500).json({ error: 'Internal Server Error', message: err.message });
       }
 
-      // Vérifie si le role_uuid existe dans la table des rôles
-      const roleResult = await client.query('SELECT * FROM roles WHERE role_uuid = $1', [role_uuid]);
-      if (!hasRows(roleResult)) {
+      // Cas de sécurité si err n'est pas une instance d'Error
+      res.status(500).json({ error: 'Internal Server Error', message: 'An unknown error occurred' });
+    }
+  } else if (req.method === 'GET') {
+    try {
+      const users = await userRepository.find({ relations: ['role'] });
+      res.status(200).json(users);
+    } catch (err) {
+      console.error(err);
+
+      if (err instanceof Error) {
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error', message: 'An unknown error occurred' });
+      }
+    }
+  } else if (req.method === 'PUT') {
+    const { user_uuid, username, email, password, is_active, role_uuid } = req.body;
+
+    if (!user_uuid || !username || !email || !role_uuid) {
+      return res.status(400).json({ error: 'User UUID, username, email, and role UUID are required' });
+    }
+
+    try {
+      const role = await roleRepository.findOne({ where: { role_uuid } });
+
+      if (!role) {
         return res.status(400).json({ error: 'Invalid role UUID' });
       }
 
-      // Vérifie si l'utilisateur existe
-      const userResult = await client.query('SELECT * FROM users WHERE user_uuid = $1', [user_uuid]);
-      if (!hasRows(userResult)) {
+      const user = await userRepository.findOne({ where: { user_uuid } });
+
+      if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Vérifie si le nom d'utilisateur ou l'email existe déjà (en excluant l'utilisateur actuel)
-      const existingUser = await client.query(
-        'SELECT * FROM users WHERE (username = $1 OR email = $2) AND user_uuid != $3',
-        [username, email, user_uuid]
-      );
+      const existingUser = await userRepository.findOne({
+        where: [
+          { email },
+          { username }
+        ]
+      });
 
-      if (hasRows(existingUser)) {
-        const user = existingUser.rows[0];
-        if (user.username === username) {
-          return res.status(400).json({ error: 'Username is already in use' });
-        }
-        if (user.email === email) {
+      if (existingUser && existingUser.user_uuid !== user_uuid) {
+        if (existingUser.email === email) {
           return res.status(400).json({ error: 'Email is already in use' });
         }
+        if (existingUser.username === username) {
+          return res.status(400).json({ error: 'Username is already in use' });
+        }
       }
 
-      // Met à jour l'utilisateur
-      const result = await client.query(
-        'UPDATE users SET username = $1, email = $2, password = $3, is_active = $4, role_uuid = $5 WHERE user_uuid = $6 RETURNING *',
-        [username, email, password, is_active ?? true, role_uuid, user_uuid]
-      );
+      user.username = username;
+      user.email = email;
+      user.password = password;
+      user.is_active = is_active ?? true;
+      user.role = role;
 
-      if (!hasRows(result)) {
+      const result = await userRepository.save(user);
+      res.status(200).json(result);
+    } catch (err) {
+      console.error(err);
+
+      if (err instanceof Error) {
+        if (err.message.includes('unique constraint')) {
+          return res.status(400).json({ error: 'Email or Username already in use' });
+        }
+        return res.status(500).json({ error: 'Internal Server Error', message: err.message });
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'An unknown error occurred' });
+    }
+  } else if (req.method === 'PATCH') {
+    const { user_uuid, username, email, password, is_active, role_uuid } = req.body;
+
+    if (!user_uuid) {
+      return res.status(400).json({ error: 'User UUID is required' });
+    }
+
+    try {
+      const user = await userRepository.findOne({ where: { user_uuid } });
+
+      if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      res.status(200).json(result.rows[0]);
-
-    } else if (req.method === 'PATCH') {
-      const { user_uuid, username, email, password, is_active, role_uuid } = req.body;
-
-      if (!user_uuid) {
-        return res.status(400).json({ error: 'User UUID is required' });
-      }
-
-      const fields = [];
-      const values = [];
-      let index = 1;
-
-      if (username) {
-        fields.push(`username = $${index++}`);
-        values.push(username);
-      }
-      if (email) {
-        fields.push(`email = $${index++}`);
-        values.push(email);
-      }
-      if (password) {
-        fields.push(`password = $${index++}`);
-        values.push(password);
-      }
-      if (is_active !== undefined) {
-        fields.push(`is_active = $${index++}`);
-        values.push(is_active);
-      }
       if (role_uuid) {
-        // Vérifie si le role_uuid existe dans la table des rôles
-        const roleResult = await client.query('SELECT * FROM roles WHERE role_uuid = $1', [role_uuid]);
-        if (!hasRows(roleResult)) {
+        const role = await roleRepository.findOne({ where: { role_uuid } });
+
+        if (!role) {
           return res.status(400).json({ error: 'Invalid role UUID' });
         }
 
-        fields.push(`role_uuid = $${index++}`);
-        values.push(role_uuid);
+        user.role = role;
       }
 
-      if (fields.length === 0) {
-        return res.status(400).json({ error: 'No fields to update' });
-      }
+      if (username) user.username = username;
+      if (email) user.email = email;
+      if (password) user.password = password;
+      if (is_active !== undefined) user.is_active = is_active;
 
-      values.push(user_uuid);
+      const existingUser = await userRepository.findOne({
+        where: [
+          { email },
+          { username }
+        ]
+      });
 
-      // Vérifie si l'utilisateur existe
-      const userResult = await client.query('SELECT * FROM users WHERE user_uuid = $1', [user_uuid]);
-      if (!hasRows(userResult)) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      // Vérifie si le nom d'utilisateur ou l'email existe déjà (en excluant l'utilisateur actuel)
-      const existingUser = await client.query(
-        'SELECT * FROM users WHERE (username = $1 OR email = $2) AND user_uuid != $3',
-        [username, email, user_uuid]
-      );
-
-      if (hasRows(existingUser)) {
-        const user = existingUser.rows[0];
-        if (user.username === username) {
-          return res.status(400).json({ error: 'Username is already in use' });
-        }
-        if (user.email === email) {
+      if (existingUser && existingUser.user_uuid !== user_uuid) {
+        if (existingUser.email === email) {
           return res.status(400).json({ error: 'Email is already in use' });
         }
+        if (existingUser.username === username) {
+          return res.status(400).json({ error: 'Username is already in use' });
+        }
       }
 
-      const result = await client.query(
-        `UPDATE users SET ${fields.join(', ')} WHERE user_uuid = $${index} RETURNING *`,
-        values
-      );
+      const result = await userRepository.save(user);
+      res.status(200).json(result);
+    } catch (err) {
+      console.error(err);
 
-      if (!hasRows(result)) {
-        return res.status(404).json({ error: 'User not found' });
+      if (err instanceof Error) {
+        if (err.message.includes('unique constraint')) {
+          return res.status(400).json({ error: 'Email or Username already in use' });
+        }
+        return res.status(500).json({ error: 'Internal Server Error', message: err.message });
       }
 
-      res.status(200).json(result.rows[0]);
+      res.status(500).json({ error: 'Internal Server Error', message: 'An unknown error occurred' });
+    }
+  } else if (req.method === 'DELETE') {
+    const { user_uuid } = req.body;
 
-    } else if (req.method === 'DELETE') {
-      const { user_uuid } = req.body;
+    if (!user_uuid) {
+      return res.status(400).json({ error: 'User UUID is required' });
+    }
 
-      if (!user_uuid) {
-        return res.status(400).json({ error: 'User UUID is required' });
-      }
+    try {
+      const result = await userRepository.delete(user_uuid);
 
-      const result = await client.query(
-        'DELETE FROM users WHERE user_uuid = $1 RETURNING *',
-        [user_uuid]
-      );
-
-      if (!hasRows(result)) {
+      if (result.affected === 0) {
         return res.status(404).json({ error: 'User not found' });
       }
 
       res.status(200).json({ message: 'User deleted successfully' });
+    } catch (err) {
+      console.error(err);
 
-    } else {
-      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-      res.status(405).end(`Method ${req.method} Not Allowed`);
+      if (err instanceof Error) {
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error', message: 'An unknown error occurred' });
+      }
     }
-  } catch (err) {
-    console.error('Error handling request:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+  } else {
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 };
 
